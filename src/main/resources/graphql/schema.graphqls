@@ -37,10 +37,11 @@ type Compte {
 }
 
 type Mutation {
-    saveCompte(compte:CompteRequest):Compte
-    addTransaction(transactionRequest : TransactionRequest) : Transaction
-    deleteCompte (id : ID) : String
+    saveCompte(compte: CompteRequest): Compte
+    addTransaction(transactionRequest: TransactionRequest): Transaction
+    deleteCompte(id: ID): String
 }
+
 
 input CompteRequest {
     solde: Float

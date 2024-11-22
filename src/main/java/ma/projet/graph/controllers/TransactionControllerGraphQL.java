@@ -11,11 +11,13 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.util.Map;
 
 @Controller
+@CrossOrigin(origins = "http://localhost:3000")
 @AllArgsConstructor
 public class TransactionControllerGraphQL {
 
@@ -54,17 +56,33 @@ public class TransactionControllerGraphQL {
     // Mutation to create a new transaction
     @MutationMapping
     public Transaction addTransaction(@Argument TransactionRequest transactionRequest) {
+        // Find the associated account
         Compte compte = compteRepository.findById(transactionRequest.getCompteId())
                 .orElseThrow(() -> new RuntimeException("Compte not found"));
 
+        // Create the new transaction
         Transaction transaction = new Transaction();
         transaction.setMontant(transactionRequest.getMontant());
-        transaction.setDate(transactionRequest.getDate());
         transaction.setType(transactionRequest.getType());
+        transaction.setDate(transactionRequest.getDate());
         transaction.setCompte(compte);
 
-        transactionRepository.save(transaction);
-        return transaction;
+        // Update the account solde based on transaction type
+        if (transactionRequest.getType() == TypeTransaction.DEPOT) {
+            compte.setSolde(compte.getSolde() + transactionRequest.getMontant());
+        } else if (transactionRequest.getType() == TypeTransaction.RETRAIT) {
+            if (compte.getSolde() < transactionRequest.getMontant()) {
+                throw new RuntimeException("Insufficient funds for withdrawal");
+            }
+            compte.setSolde(compte.getSolde() - transactionRequest.getMontant());
+        }
+
+        // Save the updated account
+        compteRepository.save(compte);
+
+        // Save the transaction
+        return transactionRepository.save(transaction);
     }
+
 
 }

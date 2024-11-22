@@ -9,11 +9,16 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @Controller
+@CrossOrigin(origins = "http://localhost:3000")
 @AllArgsConstructor
 public class CompteControllerGraphQL {
 
@@ -32,9 +37,30 @@ public class CompteControllerGraphQL {
     }
 
     @MutationMapping
-    public Compte saveCompte(@Argument Compte compte){
-       return compteRepository.save(compte);
+    public Compte saveCompte(@Argument("compte") ma.projet.graph.dto.CompteRequest compteRequest) {
+        if (compteRequest == null) {
+            throw new RuntimeException("CompteRequest cannot be null");
+        }
+
+        Compte compte = new Compte();
+        compte.setSolde(compteRequest.getSolde());
+
+        if (compteRequest.getDateCreation() != null) {
+            try {
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = formatter.parse(compteRequest.getDateCreation());
+                compte.setDateCreation(date);
+            } catch (ParseException e) {
+                throw new RuntimeException("Invalid date format. Expected yyyy-MM-dd.");
+            }
+        } else {
+            compte.setDateCreation(new Date());
+        }
+
+        compte.setType(compteRequest.getType());
+        return compteRepository.save(compte);
     }
+
 
 
     @MutationMapping

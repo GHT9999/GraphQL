@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Data
@@ -22,4 +24,7 @@ public class Compte {
 
     @Enumerated(EnumType.STRING)
     private TypeCompte type;
+
+    @OneToMany(mappedBy = "compte", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> transactions = new ArrayList<>();
 }
